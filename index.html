@@ -1,0 +1,26 @@
+<!DOCUMENT html>
+<head>
+        <link rel="stylesheet" type="text/css" href="./todo.css">
+</head>
+<body>
+    <div class="main">
+        <h1>todos</h1>
+        <table id="todo_input">
+            <tr id="input_tr">
+                <th class="checkbox_th"><input type="checkbox"></th>
+                <th class="input_th"><input type="text", id="input_todo_box" autocomplete="off", placeholder="What's need to be done?"></th>
+                <th></th>
+            </tr>
+        </table>
+        <div class="radio">
+            <input type="radio" name="filter" value="all" checked=true> all
+            <input type="radio" name="filter" value="active"> active
+            <input type="radio" name="filter" value="done"> complete
+        </div>
+    </div>
+    <script src="underscore.js"></script>
+    <script src="jQuery.js"></script>
+    <script src="backbone.js"></script>
+    <script src="todoModel.js"></script>
+    <script src="todo.js"></script>
+</body>
