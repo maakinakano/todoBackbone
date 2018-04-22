@@ -43,26 +43,42 @@ const TodoListView = Backbone.View.extend({
 
 const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
-		const t = this
+		const self = this
 		const todo = attr.todo
-		t.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
+		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
+		self.todoCheckboxView.on('FLIP_COMPLETE', function(isDone) {
+			self.flipComplete(isDone, self)
+		})
 
-		t.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(todo.get('name'))})
-		t.todoNameView.on('EDIT_TODO', function(name) {
+		self.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(todo.get('name'))})
+		self.todoNameView.on('EDIT_TODO', function(name) {
 			const todoEditView = new TodoEditView({el: $('<input type="text" class="todo_edit">').val(name)})
-			t.todoNameView.$el.html(todoEditView.$el)
+			self.todoNameView.$el.html(todoEditView.$el)
 			todoEditView.on('BLUR_TODO', function(name){
-				t.todoNameView.$el.html(name)
+				self.todoNameView.$el.html(name)
 			})
 			todoEditView.$el.focus()
 		})
 
-		t.eraseButtonView = new EraseButtonView({el: $('<input type="button">')})
+		self.eraseButtonView = new EraseButtonView({el: $('<input type="button">')})
 	},
 	render: function() {
 		const checkbox_th = $('<th class="checkbox_th">').html(this.todoCheckboxView.$el)
 		const erase_th = $('<th class="erase_th">').html(this.eraseButtonView.$el)
 		this.$el.append(checkbox_th, this.todoNameView.$el, erase_th)
+	},
+	flipComplete: function(isDone, self) {
+		if(isDone) {
+			self.todoNameView.$el.css({
+				'text-decoration': 'line-through',
+				'color': 'rgba(150,150,150,0.5)'
+			})
+		} else {
+			self.todoNameView.$el.css({
+				'text-decoration': 'none',
+				'color': 'black'
+			})
+		}
 	}
 })
 
@@ -70,10 +86,11 @@ const TodoView = Backbone.View.extend({
 ///ViewŠñ‚è‚ÌView
 const TodoCheckboxView = Backbone.View.extend({
 	events: {
-//		'click': 'flipComplete'
+		'click': 'flipComplete'
 	},
-//	flipComplete: function() {
-//	},
+	flipComplete: function() {
+		this.trigger('FLIP_COMPLETE', this.$el.prop('checked'))
+	},
 })
 
 const TodoNameView = Backbone.View.extend({
@@ -102,6 +119,7 @@ const TodoEditView = Backbone.View.extend({
 		}
 	}
 })
+
 
 ///Model
 const Todo = Backbone.Model.extend({
