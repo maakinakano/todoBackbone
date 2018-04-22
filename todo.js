@@ -10,31 +10,55 @@ const ParentView = Backbone.View.extend({
 			const todo = new Todo({
 				name: value,
 				isDone: false
-			});
+			})
 			todoList.add(todo)
 		})
+		self.todoListView.changes()
 	}
 })
 
 const TodoListView = Backbone.View.extend({
 	el: $('table#todo_list'),
 	initialize: function(todoList, filterRadioView) {
+		const self = this
 		todoList.on('add', function(todo) {
 			const todoView = new TodoView({
 				el:  $('<tr class="todo_tr">'),
 				todo: todo,
 				filterRadioView: filterRadioView
-			});
+			})
 			$('table#todo_list').append(todoView.$el)
 			todoView.render()
+			todoView.on('ERASE_TODO', (eraseTodo)=>{todoList.remove(eraseTodo)})
+			todoView.on('CHANGES', self.changes)
+			self.changes()
 		})
+	},
+	changes: function(self) {
+		let count = 0
+		let acCount = 0
+		$('.todo_tr input[type="checkbox"]').each((i, checkbox)=>{
+			count++
+			if(!$(checkbox).prop('checked')){
+				acCount++
+			}
+		})
+		$('#item_left').html(acCount+' item left')
+		if(count == 0){
+			$('#all_checkbox').hide()
+			$('#filter_button').hide()
+		} else {
+			$('#all_checkbox').show()
+			$('#filter_button').show()
+		}
 	}
+
 })
 
 const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
 		const self = this
-		const todo = attr.todo
+		self.todo = attr.todo
 		attr.filterRadioView.on('FILTERING', function(val){
 			const check = self.todoCheckboxView.$el.prop('checked')
 			if(val === 'active' && check) {
@@ -45,12 +69,13 @@ const TodoView = Backbone.View.extend({
 				self.$el.show()
 			}
 		})
+		
 		///checkbox
-		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
+		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', self.todo.get('isDone'))})
 		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{self.flipComplete(isDone, self)})
 
 		//todoName th
-		self.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(todo.get('name'))})
+		self.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(self.todo.get('name'))})
 		self.todoNameView.on('EDIT_TODO', function(name) {
 			const todoEditView = new TodoEditView({el: $('<input type="text" class="todo_edit">').val(name)})
 			self.todoNameView.$el.html(todoEditView.$el)
@@ -80,9 +105,12 @@ const TodoView = Backbone.View.extend({
 				'color': 'black'
 			})
 		}
+		self.trigger('CHANGES')
 	},
 	eraseTodo: function(self) {
+		self.trigger('ERASE_TODO', self.todo)
 		self.$el.remove()
+		self.trigger('CHANGES')
 	}
 })
 
@@ -167,9 +195,9 @@ const Todo = Backbone.Model.extend({
         name: null,
         isdone: false
     }
-});
+})
 
 const TodoList = Backbone.Collection.extend({
-    model: Todo
-});
+    model: Todo,
+})
 
