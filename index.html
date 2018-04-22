@@ -1,26 +1,37 @@
 <!DOCUMENT html>
 <head>
-        <link rel="stylesheet" type="text/css" href="./todo.css">
+	<link rel="stylesheet" type="text/css" href="./todo.css">
 </head>
+
 <body>
-    <div class="main">
-        <h1>todos</h1>
-        <table id="todo_input">
-            <tr id="input_tr">
-                <th class="checkbox_th"><input type="checkbox"></th>
-                <th class="input_th"><input type="text", id="input_todo_box" autocomplete="off", placeholder="What's need to be done?"></th>
-                <th></th>
-            </tr>
-        </table>
-        <div class="radio">
-            <input type="radio" name="filter" value="all" checked=true> all
-            <input type="radio" name="filter" value="active"> active
-            <input type="radio" name="filter" value="done"> complete
-        </div>
-    </div>
-    <script src="underscore.js"></script>
-    <script src="jQuery.js"></script>
-    <script src="backbone.js"></script>
-    <script src="todoModel.js"></script>
-    <script src="todo.js"></script>
+	<div id="main">
+		<h1>todos</h1>
+		<table id="todo_list">
+			<tr id="input_tr">
+				<th class="checkbox_th"><input type="checkbox" id="all_checkbox"></th>
+				<th class="input_th"><input type="text" id="todo_input" autocomplete="off" placeholder="What's need to be done?"></th>
+				<th class="erase_th"></th>
+			</tr>
+		</table>
+		<div id="filter_button">
+			<table><tr>
+			<th><div id="item_left">item left</div></th>
+			<th>
+				<input type="radio" name="filter" value="all" checked=true> All
+				<input type="radio" name="filter" value="active"> Active
+				<input type="radio" name="filter" value="completed"> Completed
+			</th>
+			<th><input type="button" id="clear_completed" value="Clear Completed"></th>
+			</tr>
+			</table>
+		</div>
+		<input type="button" id="debug" value="reset localStrage for debug">
+	</div>
+	<script type="text/javascript", src="./jquery.js"></script>
+	<script type="text/javascript", src="./underscore.js"></script>
+	<script type="text/javascript", src="./backbone.js"></script>
+	<script type="text/javascript", src="./todo.js"></script>
+	<script type="text/javascript">
+		init();
+	</script>
 </body>
