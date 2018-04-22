@@ -4,8 +4,9 @@ const ParentView = Backbone.View.extend({
 		const self = this
 		self.filterRadioView = new FilterRadioView()
 		self.todoInputView = new TodoInputView()
+		self.allCheckboxView = new AllCheckboxView()
 		const todoList = new TodoList()
-		self.todoListView = new TodoListView(todoList, self.filterRadioView)
+		self.todoListView = new TodoListView(todoList, self.filterRadioView, self.allCheckboxView)
 		self.todoInputView.on('ADD_TODO', function(value) {
 			const todo = new Todo({
 				name: value,
@@ -19,18 +20,20 @@ const ParentView = Backbone.View.extend({
 
 const TodoListView = Backbone.View.extend({
 	el: $('table#todo_list'),
-	initialize: function(todoList, filterRadioView) {
+	initialize: function(todoList, filterRadioView, allCheckboxView) {
 		const self = this
 		todoList.on('add', function(todo) {
 			const todoView = new TodoView({
 				el:  $('<tr class="todo_tr">'),
 				todo: todo,
-				filterRadioView: filterRadioView
+				filterRadioView: filterRadioView,
+				allCheckboxView: allCheckboxView
 			})
 			$('table#todo_list').append(todoView.$el)
 			todoView.render()
 			todoView.on('ERASE_TODO', (eraseTodo)=>{todoList.remove(eraseTodo)})
 			todoView.on('CHANGES', self.changes)
+			todoView.on('FLIP_ALL', (isDone)=>{$('#all_checkbox').prop('checked', isDone)})
 			self.changes()
 		})
 	},
@@ -63,7 +66,12 @@ const TodoView = Backbone.View.extend({
 		const self = this
 		self.todo = attr.todo
 		attr.filterRadioView.on('FILTERING', (val)=>{self.filtering(val, self)})
-		
+		attr.allCheckboxView.on('FLIP_COMPLETE', (isDone)=>{
+			self.todoCheckboxView.$el.prop('checked', isDone)
+			self.flipComplete(isDone, self)
+			self.filtering($('input[name="filter"]:checked').val(), self)
+			self.trigger('FLIP_ALL', isDone)
+		})
 		///checkbox
 		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', self.todo.get('isDone'))})
 		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{
@@ -194,6 +202,16 @@ const FilterRadioView = Backbone.View.extend({
 	clickFilter: function(e) {
 		this.trigger('FILTERING', $(e.target).val())
 	}
+})
+
+const AllCheckboxView = Backbone.View.extend({
+	el: $('#all_checkbox'),
+	events: {
+		'click': 'flipComplete'
+	},
+	flipComplete: function() {
+		this.trigger('FLIP_COMPLETE', this.$el.prop('checked'))
+	},
 })
 
 ///Model
