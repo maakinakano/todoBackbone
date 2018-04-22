@@ -35,15 +35,18 @@ const TodoListView = Backbone.View.extend({
 		})
 	},
 	changes: function(self) {
+		let isAllCheck = true
 		let count = 0
 		let acCount = 0
 		$('.todo_tr input[type="checkbox"]').each((i, checkbox)=>{
 			count++
+			isAllCheck &= $(checkbox).prop('checked')
 			if(!$(checkbox).prop('checked')){
 				acCount++
 			}
 		})
 		$('#item_left').html(acCount+' item left')
+		$('#all_checkbox').prop('checked', isAllCheck)
 		if(count == 0){
 			$('#all_checkbox').hide()
 			$('#filter_button').hide()
@@ -59,20 +62,14 @@ const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
 		const self = this
 		self.todo = attr.todo
-		attr.filterRadioView.on('FILTERING', function(val){
-			const check = self.todoCheckboxView.$el.prop('checked')
-			if(val === 'active' && check) {
-				self.$el.hide()
-			} else if(val === 'completed' && !check) {
-				self.$el.hide()
-			} else {
-				self.$el.show()
-			}
-		})
+		attr.filterRadioView.on('FILTERING', (val)=>{self.filtering(val, self)})
 		
 		///checkbox
 		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', self.todo.get('isDone'))})
-		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{self.flipComplete(isDone, self)})
+		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{
+			self.flipComplete(isDone, self)
+			self.filtering($('input[name="filter"]:checked').val(), self)
+		})
 
 		//todoName th
 		self.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(self.todo.get('name'))})
@@ -111,6 +108,16 @@ const TodoView = Backbone.View.extend({
 		self.trigger('ERASE_TODO', self.todo)
 		self.$el.remove()
 		self.trigger('CHANGES')
+	},
+	filtering: function(val, self) {
+		const check = self.todoCheckboxView.$el.prop('checked')
+		if(val === 'active' && check) {
+			self.$el.hide()
+		} else if(val === 'completed' && !check) {
+			self.$el.hide()
+		} else {
+			self.$el.show()
+		}
 	}
 })
 
