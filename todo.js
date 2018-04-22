@@ -43,17 +43,21 @@ const TodoListView = Backbone.View.extend({
 
 const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
-		this.todoCheckboxView = new TodoCheckboxView({
-			el: $('<input type="checkbox">'),
-			isDone: attr.todo.get('isDone')
+		const t = this
+		const todo = attr.todo
+		t.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
+
+		t.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(todo.get('name'))})
+		t.todoNameView.on('EDIT_TODO', function(name) {
+			const todoEditView = new TodoEditView({el: $('<input type="text" class="todo_edit">').val(name)})
+			t.todoNameView.$el.html(todoEditView.$el)
+			todoEditView.on('BLUR_TODO', function(name){
+				t.todoNameView.$el.html(name)
+			})
+			todoEditView.$el.focus()
 		})
-		this.todoNameView = new TodoNameView({
-			el: $('<th class="todoName_th">'),
-			name: attr.todo.get('name')
-		})
-		this.eraseButtonView = new EraseButtonView({
-			el: $('<input type="button">')
-		})
+
+		t.eraseButtonView = new EraseButtonView({el: $('<input type="button">')})
 	},
 	render: function() {
 		const checkbox_th = $('<th class="checkbox_th">').html(this.todoCheckboxView.$el)
@@ -62,26 +66,41 @@ const TodoView = Backbone.View.extend({
 	}
 })
 
+
+///ViewŠñ‚è‚ÌView
 const TodoCheckboxView = Backbone.View.extend({
 	events: {
 //		'click': 'flipComplete'
-	},
-	initialize: function(attr) {
-		this.isDone = attr.isDone
-		this.$el.prop('checked', attr.isDone)
 	},
 //	flipComplete: function() {
 //	},
 })
 
 const TodoNameView = Backbone.View.extend({
-	initialize: function(attr) {
-		this.name = attr.name
-		this.$el.html(attr.name)
+	events:{
+		'dblclick': 'editTodoName'
+	},
+	editTodoName: function() {
+		this.trigger('EDIT_TODO', this.$el.text())
 	}
 })
 
 const EraseButtonView = Backbone.View.extend({
+})
+
+const TodoEditView = Backbone.View.extend({
+	events:{
+		'blur': 'blurTodoName',
+		'keydown': 'enterTodoName'
+	},
+	blurTodoName: function() {
+		this.trigger('BLUR_TODO', this.$el.val())
+	},
+	enterTodoName: function(e) {
+		if(e.keyCode == 13) {
+			this.trigger('BLUR_TODO', this.$el.val())
+		}
+	}
 })
 
 ///Model
