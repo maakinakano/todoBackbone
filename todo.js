@@ -45,22 +45,23 @@ const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
 		const self = this
 		const todo = attr.todo
+		///checkbox
 		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
-		self.todoCheckboxView.on('FLIP_COMPLETE', function(isDone) {
-			self.flipComplete(isDone, self)
-		})
+		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{self.flipComplete(isDone, self)})
 
+		//todoName th
 		self.todoNameView = new TodoNameView({el: $('<th class="todoName_th">').html(todo.get('name'))})
 		self.todoNameView.on('EDIT_TODO', function(name) {
 			const todoEditView = new TodoEditView({el: $('<input type="text" class="todo_edit">').val(name)})
 			self.todoNameView.$el.html(todoEditView.$el)
-			todoEditView.on('BLUR_TODO', function(name){
-				self.todoNameView.$el.html(name)
-			})
+			todoEditView.on('BLUR_TODO', (name)=>{self.todoNameView.$el.html(name)})
+			todoEditView.on('ERASE_TODO', ()=>{self.eraseTodo(self)})
 			todoEditView.$el.focus()
 		})
 
+		//eraseButton
 		self.eraseButtonView = new EraseButtonView({el: $('<input type="button">')})
+		self.eraseButtonView.on('ERASE_TODO', ()=>{self.eraseTodo(self)})
 	},
 	render: function() {
 		const checkbox_th = $('<th class="checkbox_th">').html(this.todoCheckboxView.$el)
@@ -79,6 +80,9 @@ const TodoView = Backbone.View.extend({
 				'color': 'black'
 			})
 		}
+	},
+	eraseTodo: function(self) {
+		self.$el.remove()
 	}
 })
 
@@ -103,6 +107,12 @@ const TodoNameView = Backbone.View.extend({
 })
 
 const EraseButtonView = Backbone.View.extend({
+	events:{
+		'click': 'eraseButton'
+	},
+	eraseButton: function() {
+		this.trigger('ERASE_TODO')
+	}
 })
 
 const TodoEditView = Backbone.View.extend({
@@ -111,11 +121,19 @@ const TodoEditView = Backbone.View.extend({
 		'keydown': 'enterTodoName'
 	},
 	blurTodoName: function() {
-		this.trigger('BLUR_TODO', this.$el.val())
+		if(this.$el.val() === '') {
+			this.trigger('ERASE_TODO')
+		} else {
+			this.trigger('BLUR_TODO', this.$el.val())
+		}
 	},
 	enterTodoName: function(e) {
 		if(e.keyCode == 13) {
-			this.trigger('BLUR_TODO', this.$el.val())
+			if(this.$el.val() === '') {
+				this.trigger('ERASE_TODO')
+			} else {
+				this.trigger('BLUR_TODO', this.$el.val())
+			}
 		}
 	}
 })
