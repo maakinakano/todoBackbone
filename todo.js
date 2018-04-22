@@ -1,10 +1,12 @@
 const ParentView = Backbone.View.extend({
 	el: $('#main'),
 	initialize: function() {
-		this.todoInputView = new TodoInputView()
+		const self = this
+		self.filterRadioView = new FilterRadioView()
+		self.todoInputView = new TodoInputView()
 		const todoList = new TodoList()
-		this.todoListView = new TodoListView(todoList)
-		this.todoInputView.on('ADD_TODO', function(value) {
+		self.todoListView = new TodoListView(todoList, self.filterRadioView)
+		self.todoInputView.on('ADD_TODO', function(value) {
 			const todo = new Todo({
 				name: value,
 				isDone: false
@@ -14,26 +16,14 @@ const ParentView = Backbone.View.extend({
 	}
 })
 
-const TodoInputView = Backbone.View.extend({
-	el: $('#todo_input'),
-	events: {
-		'keydown': 'addTodo'
-	},
-	addTodo: function(e) {
-		const todoName = this.$el.val()
-		if(e.keyCode !== 13 || todoName === ''){return}
-		this.trigger('ADD_TODO', todoName)
-		this.$el.val('')
-	}
-})
-
 const TodoListView = Backbone.View.extend({
 	el: $('table#todo_list'),
-	initialize: function(todoList) {
+	initialize: function(todoList, filterRadioView) {
 		todoList.on('add', function(todo) {
 			const todoView = new TodoView({
 				el:  $('<tr class="todo_tr">'),
-				todo: todo
+				todo: todo,
+				filterRadioView: filterRadioView
 			});
 			$('table#todo_list').append(todoView.$el)
 			todoView.render()
@@ -45,6 +35,16 @@ const TodoView = Backbone.View.extend({
 	initialize: function(attr) {
 		const self = this
 		const todo = attr.todo
+		attr.filterRadioView.on('FILTERING', function(val){
+			const check = self.todoCheckboxView.$el.prop('checked')
+			if(val === 'active' && check) {
+				self.$el.hide()
+			} else if(val === 'completed' && !check) {
+				self.$el.hide()
+			} else {
+				self.$el.show()
+			}
+		})
 		///checkbox
 		self.todoCheckboxView = new TodoCheckboxView({el: $('<input type="checkbox">').prop('checked', todo.get('isDone'))})
 		self.todoCheckboxView.on('FLIP_COMPLETE', (isDone)=>{self.flipComplete(isDone, self)})
@@ -88,6 +88,19 @@ const TodoView = Backbone.View.extend({
 
 
 ///ViewŠñ‚è‚ÌView
+const TodoInputView = Backbone.View.extend({
+	el: $('#todo_input'),
+	events: {
+		'keydown': 'addTodo'
+	},
+	addTodo: function(e) {
+		const todoName = this.$el.val()
+		if(e.keyCode !== 13 || todoName === ''){return}
+		this.trigger('ADD_TODO', todoName)
+		this.$el.val('')
+	}
+})
+
 const TodoCheckboxView = Backbone.View.extend({
 	events: {
 		'click': 'flipComplete'
@@ -138,6 +151,15 @@ const TodoEditView = Backbone.View.extend({
 	}
 })
 
+const FilterRadioView = Backbone.View.extend({
+	el: $('th#filter_radio'),
+	events:{
+		'click input[type="radio"]': 'clickFilter'
+	},
+	clickFilter: function(e) {
+		this.trigger('FILTERING', $(e.target).val())
+	}
+})
 
 ///Model
 const Todo = Backbone.Model.extend({
